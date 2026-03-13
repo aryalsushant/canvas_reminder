@@ -5,6 +5,7 @@ telegram_notifier.py — Sends reminder messages via the Telegram Bot API.
 import logging
 import re
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -28,10 +29,11 @@ def _humanize_due(due_at: datetime) -> str:
     """
     Return a friendly due-date string relative to now, e.g.
     'Today at 11:59 PM' or 'Tomorrow at 3:00 PM'.
-    Times are converted from UTC to local time for display.
+    Times are converted to the configured TIMEZONE for display.
     """
-    local_due = due_at.astimezone()          # system local timezone
-    local_now = datetime.now(timezone.utc).astimezone()
+    tz = ZoneInfo(config.TIMEZONE)
+    local_due = due_at.astimezone(tz)
+    local_now = datetime.now(timezone.utc).astimezone(tz)
 
     due_date = local_due.date()
     today = local_now.date()

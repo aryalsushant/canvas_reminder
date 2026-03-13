@@ -27,6 +27,7 @@ TELEGRAM_CHAT_ID: str = _require("TELEGRAM_CHAT_ID")
 # Behaviour
 REMINDER_HOURS_BEFORE: float = float(os.getenv("REMINDER_HOURS_BEFORE", "3"))
 CHECK_INTERVAL_MINUTES: float = float(os.getenv("CHECK_INTERVAL_MINUTES", "30"))
+TIMEZONE: str = os.getenv("TIMEZONE", "UTC")
 
 # Optional: comma-separated course IDs, e.g. "12345,67890"
 _course_ids_raw: str = os.getenv("CANVAS_COURSE_IDS", "")
