@@ -1,0 +1,22 @@
+# Secrets & private data — never commit these
+.env
+sent_reminders.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
