@@ -1,20 +1,20 @@
 # Canvas Assignment Reminder Bot
 
-A lightweight Python bot that watches your Canvas LMS for upcoming assignment deadlines and sends you a Telegram message a configurable number of hours before each one is due. Set it up once, leave it running, and never miss a deadline again.
+A lightweight Python bot that watches your Canvas LMS for upcoming assignment deadlines and sends you a message on Telegram before each one is due. Set it up once, leave it running, and never miss a deadline again.
+
+> The bot reads directly from the **Assignments** section of each course — not the calendar. As long as the professor created the assignment in Canvas with a due date, the bot will catch it.
 
 ---
 
-## Prerequisites
+## Quick Setup
 
-- Python 3.8 or later
-- A Canvas account with API access (most institutional accounts have this)
-- A Telegram account
+### Step 1 — Fork this repo
+
+Click **Fork** at the top-right of this GitHub page to get your own copy.
 
 ---
 
-## Setup
-
-### 1. Get your Canvas API token
+### Step 2 — Get your Canvas API token
 
 1. Log in to Canvas and click your profile picture (top-left).
 2. Go to **Account → Settings**.
@@ -26,120 +26,108 @@ A lightweight Python bot that watches your Canvas LMS for upcoming assignment de
 
 ---
 
-### 2. Create a Telegram bot
+### Step 3 — Create a Telegram bot
 
 1. Open Telegram and search for **@BotFather**.
-2. Send `/newbot` and follow the prompts (choose a name and username).
-3. BotFather will give you an API token that looks like `123456789:ABC-DEF...`. Copy it.
+2. Send `/newbot` and follow the prompts (choose a name and a username ending in `bot`).
+3. BotFather will give you a token like `123456789:ABC-DEF...`. Copy it.
 
 ---
 
-### 3. Find your Telegram chat ID
+### Step 4 — Find your Telegram chat ID
 
-1. Send any message to your new bot (e.g., "hello").
+1. Send any message to your new bot (e.g., "hi").
 2. Open this URL in your browser (replace `<YOUR_BOT_TOKEN>`):
    ```
    https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates
    ```
-3. Look for `"chat": {"id": 123456789, ...}` — that number is your chat ID.
+3. Find `"chat": {"id": 123456789, ...}` — that number is your chat ID.
 
 ---
 
-### 4. Find your Canvas course IDs (optional)
+### Step 5 — Deploy on Railway (free, runs 24/7)
 
-If you want to monitor only specific courses instead of all active ones:
+This is the recommended way to run the bot — it stays alive even when your computer is off.
 
-1. In Canvas, open a course.
-2. Look at the URL: `https://myschool.instructure.com/courses/12345` — the number at the end is the course ID.
-3. List multiple IDs separated by commas in `CANVAS_COURSE_IDS`.
+1. Sign up at [railway.app](https://railway.app) and connect your GitHub account.
+2. Click **New Project → Deploy from GitHub repo** and select your forked repo.
+3. Once deployed, go to your service → **Variables** tab and add the following:
 
-Leave `CANVAS_COURSE_IDS` blank to automatically monitor all active courses.
+| Variable | Value |
+|---|---|
+| `CANVAS_API_URL` | Your Canvas URL, e.g. `https://myschool.instructure.com` |
+| `CANVAS_API_TOKEN` | Token from Step 2 |
+| `TELEGRAM_BOT_TOKEN` | Token from Step 3 |
+| `TELEGRAM_CHAT_ID` | Chat ID from Step 4 |
+| `TIMEZONE` | Your timezone, e.g. `America/New_York` — see [full list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) |
+| `REMINDER_HOURS_BEFORE` | How many hours before the deadline to notify you (e.g. `4`) |
+| `CHECK_INTERVAL_MINUTES` | How often to check Canvas in minutes (e.g. `150`) |
+| `CANVAS_COURSE_IDS` | Optional — leave blank to monitor all active courses |
+
+4. Save the variables — Railway will redeploy automatically and the bot starts running.
 
 ---
 
-### 5. Configure environment variables
+### Step 6 — Verify it's working
 
-```bash
-cp .env.example .env
+In Railway, go to your service → **Logs** tab. A healthy bot looks like:
+
+```
+Canvas Reminder Bot started. Checking every 150 minute(s), reminding 4.0 hour(s) before due dates.
+Checking for upcoming assignments…
+Found 6 upcoming assignment(s)
+Next check in 150 minute(s).
 ```
 
-Open `.env` and fill in your values:
+When an assignment is within your reminder window, you'll get a Telegram message like:
 
-```env
-CANVAS_API_URL=https://myschool.instructure.com
-CANVAS_API_TOKEN=your_canvas_token
-TELEGRAM_BOT_TOKEN=your_telegram_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
-REMINDER_HOURS_BEFORE=3
-CHECK_INTERVAL_MINUTES=30
-CANVAS_COURSE_IDS=          # optional
+```
+🔔 Assignment Reminder
+
+📝 Homework 3
+📚 MATH 101
+⏰ Due: Today at 11:59 PM
+⌛ Time remaining: 3 hours 42 minutes
+
+View Assignment
 ```
 
 ---
 
-### 6. Install dependencies
+## Running locally (optional)
+
+If you want to run it on your own machine instead:
 
 ```bash
+git clone https://github.com/yourusername/canvas_reminder
+cd canvas_reminder
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
----
-
-### 7. Run the bot
-
-```bash
+cp .env.example .env            # fill in your values
 python main.py
 ```
 
-You should see log output like:
-
-```
-2024-03-15 10:00:00 [INFO] __main__: Canvas Reminder Bot started. Checking every 30 minute(s), reminding 3.0 hour(s) before due dates.
-2024-03-15 10:00:00 [INFO] __main__: Checking for upcoming assignments…
-```
-
 ---
 
-## Deploying for continuous operation
+## Configuration reference
 
-The bot needs to run continuously to catch reminders. This project is deployed on **Railway**, which keeps it running 24/7 in the cloud — even when your computer is off.
-
-### Railway (recommended)
-
-1. Push this repo to GitHub (use a **private** repository to keep your code safe).
-2. Sign up at [railway.app](https://railway.app) and connect your GitHub account.
-3. Click **New Project → Deploy from GitHub repo** and select this repository.
-4. Once deployed, go to your service → **Variables** tab and add all the values from `.env.example` with your real credentials.
-5. Railway will redeploy automatically and the bot will start running.
-
-The `Procfile` in this repo tells Railway how to start the bot:
-
-```
-worker: python main.py
-```
-
-You can monitor live output under the **Logs** tab in your Railway service. A healthy bot looks like:
-
-```
-Canvas Reminder Bot started. Checking every 30 minute(s), reminding 3.0 hour(s) before due dates.
-Checking for upcoming assignments…
-Found 6 upcoming assignment(s)
-Next check in 30 minute(s).
-```
-
-> **Note:** Do not set `CHECK_INTERVAL_MINUTES` to a large value like 720 (12 hours). The bot needs to check frequently enough to catch the reminder window. 30 minutes is a safe default for a 3-hour reminder window.
-
-### Other options
-
-- **Cron job** — if you have an always-on machine, add `@reboot cd /path/to/canvas_reminder && python3 main.py >> bot.log 2>&1` via `crontab -e`.
-- **VPS with systemd** — clone the repo on any Linux VPS and run it as a systemd service.
-- **PythonAnywhere** — free tier only supports once-daily scheduled tasks, not continuous loops. Requires a paid plan for always-on tasks.
+| Variable | Default | Description |
+|---|---|---|
+| `CANVAS_API_URL` | required | Base URL of your Canvas instance |
+| `CANVAS_API_TOKEN` | required | Your Canvas personal access token |
+| `TELEGRAM_BOT_TOKEN` | required | Your Telegram bot token from @BotFather |
+| `TELEGRAM_CHAT_ID` | required | Your personal Telegram chat ID |
+| `TIMEZONE` | `UTC` | Your local timezone for display (IANA format) |
+| `REMINDER_HOURS_BEFORE` | `3` | Hours before deadline to send reminder |
+| `CHECK_INTERVAL_MINUTES` | `30` | How often to check Canvas |
+| `CANVAS_COURSE_IDS` | _(empty)_ | Comma-separated course IDs — blank = all active courses |
 
 ---
 
 ## Security
 
-- **Never commit `.env`** — it contains your API tokens. The `.gitignore` in this project excludes it, but double-check before pushing.
-- **Never share your tokens** — anyone with your Canvas token can read your courses and submissions; anyone with your Telegram token can send messages as your bot.
+- **Never commit `.env`** — it contains your API tokens. The `.gitignore` excludes it automatically.
+- **Never share your tokens** — anyone with your Canvas token can read your courses and submissions.
 - Rotate your tokens immediately if you suspect they've been exposed.
-- `sent_reminders.json` contains assignment names and IDs — it is also excluded from git.
+- `sent_reminders.json` contains assignment data — it is also excluded from git.
