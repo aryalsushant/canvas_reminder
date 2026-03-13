@@ -102,63 +102,38 @@ You should see log output like:
 
 ## Deploying for continuous operation
 
-The bot needs to run continuously to catch reminders. A few options:
+The bot needs to run continuously to catch reminders. This project is deployed on **Railway**, which keeps it running 24/7 in the cloud — even when your computer is off.
 
-### Cron job (simplest, for always-on machines)
+### Railway (recommended)
 
-```bash
-# Run at reboot; redirect logs to a file
-@reboot cd /path/to/canvas_reminder && /usr/bin/python3 main.py >> bot.log 2>&1
+1. Push this repo to GitHub (use a **private** repository to keep your code safe).
+2. Sign up at [railway.app](https://railway.app) and connect your GitHub account.
+3. Click **New Project → Deploy from GitHub repo** and select this repository.
+4. Once deployed, go to your service → **Variables** tab and add all the values from `.env.example` with your real credentials.
+5. Railway will redeploy automatically and the bot will start running.
+
+The `Procfile` in this repo tells Railway how to start the bot:
+
+```
+worker: python main.py
 ```
 
-Add this with `crontab -e`.
+You can monitor live output under the **Logs** tab in your Railway service. A healthy bot looks like:
 
-### PythonAnywhere
-
-1. Upload the project to PythonAnywhere.
-2. Go to the **Tasks** tab and create a scheduled task that runs `python main.py`.
-3. PythonAnywhere free-tier scheduled tasks run once daily — for true continuous operation, upgrade to a paid plan and use an **Always-on task**.
-
-### VPS with systemd
-
-Create `/etc/systemd/system/canvas-reminder.service`:
-
-```ini
-[Unit]
-Description=Canvas Assignment Reminder Bot
-After=network.target
-
-[Service]
-WorkingDirectory=/path/to/canvas_reminder
-ExecStart=/usr/bin/python3 main.py
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
+```
+Canvas Reminder Bot started. Checking every 30 minute(s), reminding 3.0 hour(s) before due dates.
+Checking for upcoming assignments…
+Found 6 upcoming assignment(s)
+Next check in 30 minute(s).
 ```
 
-Then:
+> **Note:** Do not set `CHECK_INTERVAL_MINUTES` to a large value like 720 (12 hours). The bot needs to check frequently enough to catch the reminder window. 30 minutes is a safe default for a 3-hour reminder window.
 
-```bash
-sudo systemctl enable canvas-reminder
-sudo systemctl start canvas-reminder
-sudo systemctl status canvas-reminder
-```
+### Other options
 
-### VPS with screen or tmux
-
-```bash
-# With screen
-screen -S canvas-bot
-python main.py
-# Detach: Ctrl+A then D
-
-# With tmux
-tmux new -s canvas-bot
-python main.py
-# Detach: Ctrl+B then D
-```
+- **Cron job** — if you have an always-on machine, add `@reboot cd /path/to/canvas_reminder && python3 main.py >> bot.log 2>&1` via `crontab -e`.
+- **VPS with systemd** — clone the repo on any Linux VPS and run it as a systemd service.
+- **PythonAnywhere** — free tier only supports once-daily scheduled tasks, not continuous loops. Requires a paid plan for always-on tasks.
 
 ---
 
